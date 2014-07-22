@@ -39,6 +39,15 @@ class BuildQueryTest(TestCase):
             "(AND: (OR: ('name__icontains', 'now'), ('description__icontains', 'now')), (OR: ('name__icontains', 'is'), ('description__icontains', 'is')), (OR: ('name__icontains', 'the'), ('description__icontains', 'the')), (OR: ('name__icontains', 'time'), ('description__icontains', 'time')))"
         )
 
+    def test_return_none_for_empty_string(self):
+        """
+        If string withouth terms is provided to build_query then return None
+
+        """
+        query = build_query(' ', ['name', 'description'])
+
+        self.assertIsNone(query)
+
 
 class GenericSearchTest(TransactionTestCase):
     """

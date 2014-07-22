@@ -1,6 +1,14 @@
 import re
+import operator
+
+try:
+    from functools import reduce
+except ImportError:
+    # In Python 2 reduce is in builtins
+    pass
 
 from django.db.models import Q
+
 
 def normalize_query(query_string,
                     findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
@@ -14,24 +22,20 @@ def build_query(query_string, search_fields):
         aims to search keywords within a model by testing the given search fields.
 
     '''
-    query = None # Query to search for every search term
     terms = normalize_query(query_string)
-    for term in terms:
-        or_query = None # Query to search for a given term in each field
-        for field_name in search_fields:
-            q = Q(**{"%s__icontains" % field_name: term})
 
-            if or_query:
-                or_query = or_query |q
-            else:
-                or_query = q
+    if not terms:
+        return None
 
-
-        if query:
-            query = query & or_query
-        else:
-            query = or_query
+    query = reduce(
+        operator.__and__,
+        (reduce(
+            operator.__or__,
+            (Q(**{"%s__icontains" % field_name: term}) for field_name in search_fields)
+        ) for term in terms),
+    )
     return query
+
 
 def generic_search(request,model,fields,query_param="q" ):
     """
