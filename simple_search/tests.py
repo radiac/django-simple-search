@@ -49,7 +49,7 @@ class BuildQueryTest(TestCase):
         self.assertIsNone(query)
 
 
-class GenericSearchTest(TransactionTestCase):
+class SearchTest(TransactionTestCase):
     """
     """
 
@@ -77,33 +77,32 @@ class GenericSearchTest(TransactionTestCase):
                     [self.entry,]
         )
 
+    def test_generic_empty_query_returns_all(self,):
+        """
+        """
+        request = MockRequest({})
+        result = generic_search(request, Entry, ["name","description"])
+
+        self.assertEquals(set(result),
+                          set(Entry.objects.all())
+        )
+        
     def test_multiple_records(self, ):
         """
         """
-        request = MockRequest({"q":"fred"})
-
-
-        result = generic_search(request,Entry,["name","description"])
+        result = perform_search("fred", Entry, ["name","description"])
 
         self.assertEquals(list(result),
                     self.freds
         )
 
-    def test_empty_query_returns_all(self,):
-        """
-        """
-
-        request = MockRequest({})
-
-
-        result = generic_search(request,Entry,["name","description"])
-
-        self.assertEquals(set(result),
-                          set(Entry.objects.all())
+    def test_queryset(self,):
+        result = perform_search(
+            "time", Entry.objects.filter(name="Now"), ['description'],
         )
-
-
-
+        self.assertEquals(list(result),
+                    [self.entry,]
+        )
 
 
 class MockRequest(object):
